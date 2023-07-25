@@ -4,6 +4,7 @@ const {
     generateAccessToken,
     generateRefreshToken,
 } = require('../middlewares/jwt');
+const jwt = require('jsonwebtoken');
 
 const register = asyncHandler(async (req, res) => {
     const { email, password, firstname, lastname } = req.body;
@@ -73,12 +74,59 @@ const getCurrent = asyncHandler(async (req, res) => {
 
     return res.status(200).json({
         success: true,
+        //result
         rs: user ? user : 'User not found',
     });
 });
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+    // Get token from cookie
+    const cookie = req.cookies;
+    //Check token
+    if (!cookie && !cookie.refreshToken) {
+        throw new Error('No refresh token');
+    }
+
+    const rs = await jwt.verify(cookie.refreshToken, process.env.JWT_SECRET);
+    const response = await User.findOne({
+        _id: decode._id,
+        refreshToken: cookie.refreshToken,
+    });
+    return res.status(200).json({
+        success: response ? true : false,
+        newAcccessToken: response
+            ? generateAccessToken(response._id, response.role)
+            : 'Refresh token not matched',
+    });
+});
+
+const logOut = asyncHandler(async (req, res) => {
+    const cookie = req.cookies;
+    if (!cookie && !cookie.refreshToken) {
+        throw new Error('No refresh token');
+    }
+    //delete cookie in db
+    await User.findOneAndUpdate(
+        { refreshToken: cookie.refreshToken },
+        { refreshToken: '' },
+        { new: true },
+    );
+    res.clearCookie('refreshToken', { httpOnly: true, secure: true });
+    res.status(200).json({
+        success: true,
+        mes: 'Logout is done successfully',
+    });
+});
+
+//Client send mail
+//Server check valid mail => send mail + Link (password change token)
+//
+
 
 module.exports = {
     register,
     login,
     getCurrent,
+    refreshAccessToken,
+    logOut,
 };
