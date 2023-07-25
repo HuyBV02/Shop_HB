@@ -21,11 +21,45 @@ const getProduct = asyncHandler(async (req, res) => {
 });
 // Filtering, sorting & pagination
 const getProducts = asyncHandler(async (req, res) => {
-    const products = await Product.find();
-    return res.status(200).json({
-        success: products ? true : false,
-        productDatas: products ? products : 'Cannot get products',
-    });
+    const queries = { ...req.query };
+    // Filter special fildes on query
+    const excludeFields = ['limit', 'sort', 'page', 'fislds'];
+    excludeFields.forEach((el) => delete queries[el]);
+
+    //Format operators for valid syntax mongoose query
+    let queryString = JSON.stringify(queries);
+    queryString = queryString.replace(
+        /\b(gte|gt|lt|lte)\b/g,
+        (matchedEl) => `$${matchedEl}`,
+    );
+    const formatedQueries = JSON.parse(queryString);
+
+    //filter
+    if (queries?.title)
+        formatedQueries.title = { $regex: queries.title, $options: 'i' };
+    let queryCommand = Product.find(formatedQueries);
+
+    //sorting
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(',').join(' ');
+        queryCommand = queryCommand.sort(sortBy);
+    }
+
+    queryCommand
+        .then((data) => {
+            res.status(200).json(data);
+        })
+        .then(async (response) => {
+            const counts = await Product.find(formatedQueries);
+            return {
+                success: response ? true : false,
+                products: response ? response : 'Cannot get products',
+                counts,
+            };
+        })
+        .catch((error) => {
+            throw new Error(error.message);
+        });
 });
 const updateProduct = asyncHandler(async (req, res) => {
     const { pid } = req.params;
@@ -46,7 +80,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
     return res.status(200).json({
         success: deletedProduct ? true : false,
         deletedProduct: deletedProduct
-            ? deletedProduct
+            ? deletedProduct``
             : 'Cannot delete product',
     });
 });
