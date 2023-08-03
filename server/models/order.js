@@ -22,4 +22,4 @@ var orderSchema = new mongoose.Schema({
 });
 
 //Export the model
-module.exports = mongoose.model('Order', oderSchema);
+module.exports = mongoose.model('Order', orderSchema);
