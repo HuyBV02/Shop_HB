@@ -31,15 +31,15 @@ const getBlogs = asyncHandler(async (req, res) => {
 
 const likeBlog = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    const { bid } = req.body;
+    const { bid } = req.params;
     if (!bid) throw new Error('Missing inputs');
     const blog = await Blog.findById(bid);
-    const alreadyDisliked = blog?.dislikes?.find((el) => el.toString() === _id);
+    const alreadyDisliked = blog?.disLikes?.find((el) => el.toString() === _id);
     if (alreadyDisliked) {
         const response = await Blog.findByIdAndUpdate(
             bid,
             {
-                $pull: { dislikes: _id },
+                $pull: { disLikes: _id },
                 isDisliked: false,
             },
             { new: true },
@@ -76,7 +76,7 @@ const likeBlog = asyncHandler(async (req, res) => {
 
 const dislikeBlog = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    const { bid } = req.body;
+    const { bid } = req.params;
     if (!bid) throw new Error('Missing inputs');
     const blog = await Blog.findById(bid);
     const alreadyLiked = blog?.likes?.find((el) => el.toString() === _id);
@@ -94,7 +94,7 @@ const dislikeBlog = asyncHandler(async (req, res) => {
         });
     }
 
-    const isDisliked = blog?.dislikes?.find((el) => el.toString() === _id);
+    const isDisliked = blog?.disLikes?.find((el) => el.toString() === _id);
     if (isDisliked) {
         const response = await Blog.findByIdAndUpdate(
             bid,
@@ -118,10 +118,37 @@ const dislikeBlog = asyncHandler(async (req, res) => {
     }
 });
 
+const getBlog = asyncHandler(async (req, res) => {
+    const { bid } = req.params;
+    const blog = await Blog.findByIdAndUpdate(
+        bid,
+        { $inc: { numberViews: 1 } },
+        { new: true },
+    )
+        .populate('likes', 'firstname lastname')
+        .populate('disLikes', 'firstname lastname');
+    return res.json({
+        success: blog ? true : false,
+        result: blog,
+    });
+});
+
+const deleteBlog = asyncHandler(async (req, res) => {
+    const { bid } = req.params;
+    const blog = await Blog.findByIdAndDelete(bid);
+
+    return res.json({
+        success: blog ? true : false,
+        result: blog || 'Somethings wents wrong!',
+    });
+});
+
 module.exports = {
     createNewBlog,
     updateBlog,
     getBlogs,
     likeBlog,
     dislikeBlog,
+    getBlog,
+    deleteBlog,
 };
