@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto')
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema(
     {
@@ -30,14 +30,20 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: 'user',
         },
-        cart: {
-            type: Array,
-            default: [],
-        },
+        cart: [
+            {
+                product: {
+                    type: mongoose.Types.ObjectId,
+                    ref: 'Product',
+                },
+                quantity: Number,
+                color: String,
+            },
+        ],
         address: [
             {
-                type: mongoose.Types.ObjectId,
-                ref: 'Address',
+                type: Array,
+                default: [],
             },
         ],
         wishlist: [
