@@ -228,7 +228,7 @@ const updateUserAddress = asyncHandler(async (req, res) => {
     if (!req.body.address) throw new Error('Missing inputs');
     const response = await User.findByIdAndUpdate(
         _id,
-        { $push: { address: req.body.address } },
+        { address: req.body.address },
         { new: true },
     ).select('-password -role -refreshToken');
     return res.status(200).json({
