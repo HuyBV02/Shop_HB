@@ -116,6 +116,7 @@ const dislikeBlog = asyncHandler(async (req, res) => {
             result: response,
         });
     }
+    
 });
 
 const getBlog = asyncHandler(async (req, res) => {
@@ -131,7 +132,7 @@ const getBlog = asyncHandler(async (req, res) => {
         success: blog ? true : false,
         result: blog,
     });
-});
+}); 
 
 const deleteBlog = asyncHandler(async (req, res) => {
     const { bid } = req.params;
